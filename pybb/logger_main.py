@@ -7,9 +7,6 @@ from black_box.datalogger.loggers.mongodb_logger import MongoDBLogger
 from black_box.datalogger.pyre_comm.bb_pyre_comm import BlackBoxPyreCommunicator
 
 from black_box.datalogger.data_readers.rostopic_reader import ROSTopicReader
-from black_box.datalogger.data_readers.zyre_reader import ZyreReader
-from black_box.datalogger.data_readers.json_zmq_reader import JsonZmqReader
-from black_box.datalogger.data_readers.event_reader import EventReader
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -36,16 +33,6 @@ if __name__ == '__main__':
             readers[reader_name] = None
     print(readers)
 
-
-    if config_params.zyre:
-        readers['zyre'] = ZyreReader(config_params.zyre, logger)
-
-    if config_params.zmq:
-        readers['zmq'] = JsonZmqReader(config_params.zmq.url,
-                                        config_params.zmq.port,
-                                        config_params.zmq.topics,
-                                        logger)
-
     if config_params.ros:
         readers['ros'] = ROSTopicReader('rostopic_reader',
                                          config_params.ros,
@@ -60,7 +47,6 @@ if __name__ == '__main__':
     bb_pyre_comm = BlackBoxPyreCommunicator(['ROPOD'], config_params.zyre.node_name)
 
     try:
-
         for reader_name in readers:
             if readers[reader_name]:
                 readers[reader_name].start_logging()
@@ -87,7 +73,7 @@ if __name__ == '__main__':
         for reader_name in readers:
             if readers[reader_name]:
                 readers[reader_name].stop_logging()
-        if readers['zyre']:
-            readers['zyre'].shutdown()
 
         bb_pyre_comm.shutdown()
+        if rostopic_reader:
+            rostopic_reader.stop()
