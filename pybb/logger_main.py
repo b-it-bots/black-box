@@ -4,7 +4,6 @@ import time
 
 from black_box.config.config_file_reader import ConfigFileReader
 from black_box.datalogger.loggers.mongodb_logger import MongoDBLogger
-from black_box.datalogger.pyre_comm.bb_pyre_comm import BlackBoxPyreCommunicator
 
 from black_box.datalogger.data_readers.rostopic_reader import ROSTopicReader
 
@@ -39,13 +38,6 @@ if __name__ == '__main__':
                                          config_params.default.max_frequency,
                                          logger)
 
-    if config_params.event:
-        readers['event'] = EventReader(config_params.event,
-                                     config_params.default.max_frequency,
-                                     logger)
-
-    bb_pyre_comm = BlackBoxPyreCommunicator(['ROPOD'], config_params.zyre.node_name)
-
     try:
         for reader_name in readers:
             if readers[reader_name]:
@@ -54,26 +46,9 @@ if __name__ == '__main__':
         print('[{0}] Logger configured; ready to log data'.format(config_params.zyre.node_name))
         logging = True
         while True:
-            if logging != bb_pyre_comm.logging:
-                if bb_pyre_comm.logging:
-                    for reader_name in readers:
-                        if readers[reader_name]:
-                            readers[reader_name].start_logging()
-                    print('[{0}] Started logging'.format(config_params.zyre.node_name))
-                else:
-                    for reader_name in readers:
-                        if readers[reader_name]:
-                            readers[reader_name].stop_logging()
-                    print('[{0}] Stopped logging'.format(config_params.zyre.node_name))
-                logging = bb_pyre_comm.logging
-
             time.sleep(0.1)
     except (KeyboardInterrupt, SystemExit):
         print('[logger_main] Interrupted. Exiting...')
         for reader_name in readers:
             if readers[reader_name]:
                 readers[reader_name].stop_logging()
-
-        bb_pyre_comm.shutdown()
-        if rostopic_reader:
-            rostopic_reader.stop()
